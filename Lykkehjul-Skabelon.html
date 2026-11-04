@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lykkehjul Skabelon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: værktøj — kontrolpanel til venstre, stor forhåndsvisning af hjulet til højre; stables på mobil */
+:root{
+  --bg:#eef0ef; --panel:#fbfcfb; --fg:#1d2422; --muted:#5f6b67; --line:#d3d9d6;
+  --accent:#0d6b63; --accent-ink:#ffffff; --small:#f3c9a5; --large:#ffffff; --seg-stroke:#2a3330; --hilite:#0d6b63;
+  --font-ui:"Archivo",system-ui,-apple-system,Segoe UI,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151a19; --panel:#1d2422; --fg:#e7ecea; --muted:#9aa6a2; --line:#334039;
+  --accent:#4fc2b6; --accent-ink:#0b1513; --small:#8a5a36; --large:#2a3330; --seg-stroke:#cfd8d4; --hilite:#4fc2b6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151a19; --panel:#1d2422; --fg:#e7ecea; --muted:#9aa6a2; --line:#334039;
+  --accent:#4fc2b6; --accent-ink:#0b1513; --small:#8a5a36; --large:#2a3330; --seg-stroke:#cfd8d4; --hilite:#4fc2b6; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:20px}
+header h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:65ch}
+.app{display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.app{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:18px}
+.group{display:grid;gap:10px}
+.group h2{margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:500;min-width:0}
+label.f small{color:var(--muted);font-weight:400}
+input[type=number],input[type=text],select{width:100%;font:500 15px var(--font-mono);color:var(--fg);background:var(--bg);
+  border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.check{display:flex;gap:8px;align-items:center;font-size:13px}
+.pattern{font:500 13px var(--font-mono);letter-spacing:.12em;word-break:break-all;background:var(--bg);border:1px dashed var(--line);border-radius:6px;padding:8px 10px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.btns{display:grid;gap:8px}
+button{font:600 14px var(--font-ui);border-radius:7px;padding:10px 12px;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--fg);text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+button .ext{font:500 12px var(--font-mono);color:var(--muted)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary .ext{color:var(--accent-ink);opacity:.8}
+button:hover{filter:brightness(.97)}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:14px;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{border-left:2px solid var(--line);padding:2px 10px}
+.stat b{display:block;font:500 17px var(--font-mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.s{border-left-color:var(--small)} .stat.l{border-left-color:var(--seg-stroke)}
+#preview{width:100%;max-width:680px;aspect-ratio:1;margin:0 auto;display:block}
+#preview path.seg{cursor:pointer;transition:fill .15s}
+#preview path.seg:hover{fill:var(--hilite);fill-opacity:.35}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);justify-content:center}
+.legend i{display:inline-block;width:12px;height:12px;border:1px solid var(--seg-stroke);vertical-align:-2px;margin-right:6px;border-radius:2px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px}
+.err{color:#b3261e;font-size:12px;margin:0}
+@media (prefers-reduced-motion:reduce){#preview path.seg{transition:none}}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <h1>Lykkehjul Skabelon</h1>
+    <p>Indtast antal store og små felter. Hvert felt eksporteres som sin egen lukkede form, klar i Illustrator uden Polar Grid og Divide.</p>
+  </header>
+
+  <div class="app">
+    <form class="panel" id="form" autocomplete="off">
+      <div class="group">
+        <h2>Felter</h2>
+        <div class="row">
+          <label class="f">Store felter<input type="number" id="nLarge" min="0" max="200" value="12"></label>
+          <label class="f">Små felter<input type="number" id="nSmall" min="0" max="200" value="6"></label>
+        </div>
+        <label class="f">Lille felt i forhold til stort <small>i procent (1/3 = 33,33)</small>
+          <input type="number" id="ratio" min="1" max="100" step="0.01" value="33.33"></label>
+      </div>
+
+      <div class="group">
+        <h2>Placering</h2>
+        <label class="f">Fordeling
+          <select id="layout">
+            <option value="even">Små felter jævnt fordelt</option>
+            <option value="pairs">Små felter parvis jævnt fordelt</option>
+            <option value="group">Små felter samlet</option>
+            <option value="custom">Eget mønster</option>
+          </select>
+        </label>
+        <div class="pattern" id="pattern" aria-live="polite"></div>
+        <p class="hint">Klik på et felt i hjulet for at skifte mellem stort (L) og lille (S). Du kan også skrive mønsteret selv:</p>
+        <input type="text" id="patternInput" placeholder="fx LLSLLS" spellcheck="false">
+        <p class="err" id="patternErr" hidden></p>
+        <label class="f">Drej hjulet <small>grader, med uret</small>
+          <input type="number" id="rotation" step="0.5" value="0"></label>
+        <label class="check"><input type="checkbox" id="centerTop" checked> Første felt centreret i toppen</label>
+      </div>
+
+      <div class="group">
+        <h2>Størrelse</h2>
+        <div class="row">
+          <label class="f">Ø hjul (mm)<input type="number" id="diam" min="10" step="1" value="600"></label>
+          <label class="f">Ø midte (mm)<small></small><input type="number" id="hub" min="0" step="1" value="0"></label>
+        </div>
+        <label class="f">Stregtykkelse (pt)<input type="number" id="stroke" min="0" step="0.05" value="0.5"></label>
+        <label class="check"><input type="checkbox" id="withNumbers"> Numre i hjulfilen</label>
+        <label class="check"><input type="checkbox" id="withFill" checked> Farvede felter (stort/lille)</label>
+      </div>
+
+      <div class="group">
+        <h2>Hent</h2>
+        <div class="btns">
+          <button type="button" class="primary" id="dlWheel">Hele hjulet <span class="ext">.svg</span></button>
+          <button type="button" id="dlLarge">Ét stort felt (guide) <span class="ext">.svg</span></button>
+          <button type="button" id="dlSmall">Ét lille felt (guide) <span class="ext">.svg</span></button>
+          <button type="button" id="copyWheel">Kopiér hjulet som SVG-kode <span class="ext">⌘V i Ai</span></button>
+        </div>
+        <p class="hint">SVG åbnes direkte i Illustrator i rigtig mm-størrelse. Hvert felt hedder L01, S01 osv. i lagpanelet.</p>
+      </div>
+    </form>
+
+    <section class="stage">
+      <div class="stats" id="stats"></div>
+      <svg id="preview" viewBox="0 0 100 100" role="img" aria-label="Forhåndsvisning af lykkehjul"></svg>
+      <div class="legend"><span><i style="background:var(--large)"></i>Stort felt (L)</span><span><i style="background:var(--small)"></i>Lille felt (S)</span></div>
+    </section>
+  </div>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const st = { pattern: [] };
+
+function num(id, d){ const v = parseFloat(String($(id).value).replace(',','.')); return isFinite(v) ? v : d; }
+
+function buildPattern(L, S, layout){
+  const N = L + S;
+  if (N === 0) return [];
+  if (S === 0) return Array(L).fill('L');
+  if (L === 0) return Array(S).fill('S');
+  if (layout === 'group') return [...Array(L).fill('L'), ...Array(S).fill('S')];
+  // Jævn fordeling: placér "enheder" (enkelt S eller par SS) jævnt blandt de store
+  const unit = layout === 'pairs' ? 2 : 1;
+  const units = [];
+  let left = S;
+  while (left > 0){ const u = Math.min(unit, left); units.push(u); left -= u; }
+  const U = units.length;
+  const out = [];
+  // Bresenham: fordel U enheder mellem L store felter
+  let acc = 0, ui = 0;
+  for (let i = 0; i < L; i++){
+    out.push('L');
+    acc += U;
+    while (acc >= L && ui < U){ for (let k=0;k<units[ui];k++) out.push('S'); ui++; acc -= L; }
+  }
+  while (ui < U){ for (let k=0;k<units[ui];k++) out.push('S'); ui++; }
+  return out;
+}
+
+function geometry(){
+  const pat = st.pattern;
+  const r = Math.min(Math.max(num('ratio',33.33),1),100)/100;
+  const L = pat.filter(c=>c==='L').length, S = pat.length - L;
+  const unitDeg = pat.length ? 360/(L + r*S) : 0;
+  const R = Math.max(num('diam',600),10)/2;
+  const ri = Math.min(Math.max(num('hub',0),0)/2, R*0.95);
+  let start = num('rotation',0);
+  if ($('centerTop').checked && pat.length){ start -= (pat[0]==='L'?unitDeg:unitDeg*r)/2; }
+  const segs = []; let a = start, cL = 0, cS = 0;
+  for (const c of pat){
+    const w = c==='L' ? unitDeg : unitDeg*r;
+    const name = c==='L' ? 'L'+String(++cL).padStart(2,'0') : 'S'+String(++cS).padStart(2,'0');
+    segs.push({type:c, a0:a, a1:a+w, name}); a += w;
+  }
+  return {segs, R, ri, L, S, r, unitDeg};
+}
+
+const pt = (cx,cy,rad,deg) => { const t = deg*Math.PI/180; return [cx + rad*Math.sin(t), cy - rad*Math.cos(t)]; };
+const f = n => +n.toFixed(4);
+
+function segPath(cx,cy,R,ri,a0,a1){
+  const sweep = a1 - a0;
+  if (sweep >= 359.999){
+    // Ét felt = hel cirkel (evt. ring)
+    let d = `M${f(cx)},${f(cy-R)}A${R},${R} 0 1 1 ${f(cx)},${f(cy+R)}A${R},${R} 0 1 1 ${f(cx)},${f(cy-R)}Z`;
+    if (ri>0) d += `M${f(cx)},${f(cy-ri)}A${ri},${ri} 0 1 0 ${f(cx)},${f(cy+ri)}A${ri},${ri} 0 1 0 ${f(cx)},${f(cy-ri)}Z`;
+    return d;
+  }
+  const big = sweep > 180 ? 1 : 0;
+  const [x0,y0] = pt(cx,cy,R,a0), [x1,y1] = pt(cx,cy,R,a1);
+  if (ri <= 0) return `M${f(cx)},${f(cy)}L${f(x0)},${f(y0)}A${f(R)},${f(R)} 0 ${big} 1 ${f(x1)},${f(y1)}Z`;
+  const [u0,v0] = pt(cx,cy,ri,a0), [u1,v1] = pt(cx,cy,ri,a1);
+  return `M${f(u0)},${f(v0)}L${f(x0)},${f(y0)}A${f(R)},${f(R)} 0 ${big} 1 ${f(x1)},${f(y1)}L${f(u1)},${f(v1)}A${f(ri)},${f(ri)} 0 ${big} 0 ${f(u0)},${f(v0)}Z`;
+}
+
+const PT = 25.4/72; // 1 pt i mm
+
+function wheelSVG(g, opts){
+  const pad = 2, size = g.R*2 + pad*2, c = size/2;
+  const sw = Math.max(num('stroke',0.5),0)*PT;
+  const fill = $('withFill').checked;
+  let s = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${f(size)}mm" height="${f(size)}mm" viewBox="0 0 ${f(size)} ${f(size)}">\n<g id="Felter">\n`;
+  for (const sg of g.segs){
+    const col = !fill ? 'none' : sg.type==='L' ? '#FFFFFF' : '#F3C9A5';
+    s += `<path id="${sg.name}" d="${segPath(c,c,g.R,g.ri,sg.a0,sg.a1)}" fill="${col}" stroke="#000000" stroke-width="${f(sw)}" stroke-linejoin="round"/>\n`;
+  }
+  s += `</g>\n`;
+  if (g.ri>0) s += `<circle id="Midte" cx="${f(c)}" cy="${f(c)}" r="${f(g.ri)}" fill="none" stroke="#000000" stroke-width="${f(sw)}"/>\n`;
+  if (opts && opts.numbers){
+    const fs = Math.max(g.R*0.06, 3);
+    s += `<g id="Numre" font-family="Arial, Helvetica, sans-serif" font-size="${f(fs)}" text-anchor="middle" fill="#000000">\n`;
+    for (const sg of g.segs){
+      const mid = (sg.a0+sg.a1)/2, rr = g.ri + (g.R-g.ri)*0.78;
+      const [x,y] = pt(c,c,rr,mid);
+      s += `<text x="${f(x)}" y="${f(y+fs*0.35)}">${sg.name}</text>\n`;
+    }
+    s += `</g>\n`;
+  }
+  return s + `</svg>\n`;
+}
+
+function singleSVG(g, type){
+  const w = type==='L' ? g.unitDeg : g.unitDeg*g.r;
+  const a0 = -w/2, a1 = w/2, sw = Math.max(num('stroke',0.5),0)*PT;
+  // Find bounding box ved sampling
+  const pts = [];
+  const steps = 200;
+  for (let i=0;i<=steps;i++){ const a = a0 + (a1-a0)*i/steps; pts.push(pt(0,0,g.R,a)); if (g.ri>0) pts.push(pt(0,0,g.ri,a)); }
+  if (g.ri<=0) pts.push([0,0]);
+  const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
+  const pad = 2;
+  const minX = Math.min(...xs)-pad, minY = Math.min(...ys)-pad, W = Math.max(...xs)-minX+pad, H = Math.max(...ys)-minY+pad;
+  const col = type==='L' ? '#FFFFFF' : '#F3C9A5';
+  const name = type==='L' ? 'Stort_felt' : 'Lille_felt';
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${f(W)}mm" height="${f(H)}mm" viewBox="${f(minX)} ${f(minY)} ${f(W)} ${f(H)}">\n<path id="${name}" d="${segPath(0,0,g.R,g.ri,a0,a1)}" fill="${col}" stroke="#000000" stroke-width="${f(sw)}" stroke-linejoin="round"/>\n<line id="Midterlinje" x1="0" y1="${f(-g.R)}" x2="0" y2="${f(-g.ri)}" stroke="#00A0E0" stroke-width="${f(sw*0.6)}" stroke-dasharray="${f(sw*6)} ${f(sw*4)}"/>\n</svg>\n`;
+}
+
+function fmt(n, d=2){ return n.toLocaleString('da-DK',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+function render(){
+  const g = geometry();
+  // mønster-tekst
+  $('pattern').textContent = st.pattern.length ? st.pattern.join(' ') : 'Ingen felter';
+  if (document.activeElement !== $('patternInput')) $('patternInput').value = st.pattern.join('');
+  // stats
+  const arcL = g.unitDeg*Math.PI/180*g.R, arcS = arcL*g.r;
+  const chord = deg => 2*g.R*Math.sin(deg*Math.PI/360);
+  const stats = [
+    ['l', `${g.L} + ${g.S}`, 'store + små felter'],
+    ['l', fmt(g.unitDeg,3)+'°', 'vinkel, stort felt'],
+    ['s', fmt(g.unitDeg*g.r,3)+'°', 'vinkel, lille felt'],
+    ['l', fmt(chord(g.unitDeg),1)+' mm', 'bredde v. kant, stort'],
+    ['s', fmt(chord(g.unitDeg*g.r),1)+' mm', 'bredde v. kant, lille'],
+  ];
+  $('stats').innerHTML = stats.map(([c,b,s])=>`<div class="stat ${c}"><b>${b}</b><span>${s}</span></div>`).join('');
+  // preview i enhedsrum 0..100
+  const R = 46, ri = g.R ? g.ri/g.R*R : 0, c = 50;
+  let h = `<circle cx="50" cy="50" r="${R+2.2}" fill="none" stroke="var(--line)" stroke-width="0.4"/>`;
+  g.segs.forEach((sg,i)=>{
+    h += `<path class="seg" data-i="${i}" d="${segPath(c,c,R,ri,sg.a0,sg.a1)}" fill="var(${sg.type==='L'?'--large':'--small'})" stroke="var(--seg-stroke)" stroke-width="0.22" stroke-linejoin="round"><title>${sg.name} – klik for at skifte</title></path>`;
+  });
+  const fs = Math.max(Math.min(3.2, 300/Math.max(g.segs.length,1)/4), 1.2);
+  g.segs.forEach(sg=>{
+    const [x,y] = pt(c,c,ri+(R-ri)*0.82,(sg.a0+sg.a1)/2);
+    h += `<text x="${f(x)}" y="${f(y+fs*0.35)}" font-size="${f(fs)}" text-anchor="middle" fill="var(--fg)" font-family="IBM Plex Mono, monospace" pointer-events="none">${sg.name}</text>`;
+  });
+  // pil i toppen
+  h += `<path d="M48.3,0.6 L51.7,0.6 L50,3.6Z" fill="var(--accent)"/>`;
+  $('preview').innerHTML = h;
+}
+
+function regenerate(){
+  const L = Math.max(0, Math.min(200, Math.round(num('nLarge',0))));
+  const S = Math.max(0, Math.min(200, Math.round(num('nSmall',0))));
+  if ($('layout').value !== 'custom') st.pattern = buildPattern(L,S,$('layout').value);
+  else {
+    // tilpas eget mønster til nye antal
+    let p = st.pattern.slice();
+    const cnt = t => p.filter(x=>x===t).length;
+    while (cnt('L') < L) p.push('L');
+    while (cnt('S') < S) p.push('S');
+    while (cnt('L') > L) p.splice(p.lastIndexOf('L'),1);
+    while (cnt('S') > S) p.splice(p.lastIndexOf('S'),1);
+    st.pattern = p;
+  }
+  render();
+}
+
+function syncCounts(){
+  $('nLarge').value = st.pattern.filter(c=>c==='L').length;
+  $('nSmall').value = st.pattern.filter(c=>c==='S').length;
+}
+
+['nLarge','nSmall'].forEach(id=>$(id).addEventListener('input',regenerate));
+$('layout').addEventListener('change',regenerate);
+['ratio','rotation','diam','hub','stroke','centerTop','withFill','withNumbers'].forEach(id=>$(id).addEventListener('input',render));
+$('centerTop').addEventListener('change',render);
+
+$('patternInput').addEventListener('input',e=>{
+  const v = e.target.value.toUpperCase().replace(/[^LS]/g,'');
+  if (/[^LS\s]/i.test(e.target.value.replace(/\s/g,''))){ $('patternErr').textContent='Brug kun L (stort) og S (lille).'; $('patternErr').hidden=false; }
+  else $('patternErr').hidden=true;
+  st.pattern = v.split('');
+  $('layout').value = 'custom';
+  syncCounts(); render();
+});
+
+$('preview').addEventListener('click',e=>{
+  const p = e.target.closest('path.seg'); if (!p) return;
+  const i = +p.dataset.i;
+  st.pattern[i] = st.pattern[i]==='L' ? 'S' : 'L';
+  $('layout').value = 'custom';
+  syncCounts(); render();
+});
+
+$('form').addEventListener('submit',e=>e.preventDefault());
+
+let toastT;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+
+function baseName(){ const g = geometry(); return `lykkehjul_${g.L}L_${g.S}S_${Math.round(g.R*2)}mm`; }
+
+let dlP = null;
+async function save(filename, data){
+  try{
+    if (!window.claude?.use){
+      const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:'image/svg+xml'}));
+      a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('Gemt: '+filename); return;
+    }
+    if (!dlP) dlP = window.claude.use('downloads');
+    const dl = await dlP;
+    if (!dl){ await copy(data, 'Download er ikke tilgængelig her. SVG-koden er kopieret i stedet.'); return; }
+    await dl.save({filename, data});
+    toast('Gemt: '+filename);
+  }catch(err){
+    if (err && err.code==='declined') return;
+    if (err && err.code==='rate_limited'){ toast('Vent et øjeblik og prøv igen.'); return; }
+    await copy(data, 'Download fejlede. SVG-koden er kopieret i stedet.');
+  }
+}
+async function copy(text, msg){
+  try{ await navigator.clipboard.writeText(text); toast(msg || 'Kopieret. Indsæt med ⌘V i Illustrator.'); }
+  catch(e){ toast('Kunne ikke kopiere automatisk.'); }
+}
+
+$('dlWheel').addEventListener('click',()=>{ const g=geometry(); if(!g.segs.length) return toast('Tilføj mindst ét felt.'); save(baseName()+'.svg', wheelSVG(g,{numbers:$('withNumbers').checked})); });
+$('dlLarge').addEventListener('click',()=>{ const g=geometry(); if(!g.L) return toast('Der er ingen store felter.'); save(baseName()+'_stort-felt.svg', singleSVG(g,'L')); });
+$('dlSmall').addEventListener('click',()=>{ const g=geometry(); if(!g.S) return toast('Der er ingen små felter.'); save(baseName()+'_lille-felt.svg', singleSVG(g,'S')); });
+$('copyWheel').addEventListener('click',()=>{ const g=geometry(); copy(wheelSVG(g,{numbers:$('withNumbers').checked})); });
+
+regenerate();
+</script>
+
+</body>
+</html>
